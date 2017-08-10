@@ -13,118 +13,109 @@ License: GPL2
 
 class MroongaSearch
 {
-  public static function activate()
+  /* TODO: Move to construct. Add table name prefix. */
+  private $table_name = "mrn_posts";
+
+  public function activate()
   {
-    self::mrn_create_table();
-  }
-  public static function deactivate()
-  {
-    self::mrn_drop_table(); 
-  }
-
-  public static function insert_data($post_ID, $post)
-  {
-    $dbname = "wddb";
-    $tablename = "mrn_blogs";
-
-    $connection = mysql_connect('localhost', 'root', 'P@ssw0rd');
-    mysql_select_db($dbname, $connection);
-
-    $sql = "INSERT INTO `{$tablename}` ("
-    ."`post_author`, `post_date`, `post_date_gmt`, "
-    ."`post_content`, `post_content_filtered`, `post_title`, "
-    ."`post_excerpt`, `post_status`, `post_type`, "
-    ."`comment_status`, `ping_status`, `post_password`, "
-    ."`post_name`, `to_ping`, `pinged`, `post_modified`, "
-    ."`post_modified_gmt`, `post_parent`, `menu_order`, "
-    ."`post_mime_type`, `guid`"
-    .")"
-    ."VALUES "
-    ."("
-    ."{$post->post_author}, '{$post->post_date}', '{$post->post_date_gmt}', "
-    ."'{$post->post_content}', '{$post->post_content_filtered}', '{$post->post_title}', "
-    ."'{$post->post_excerpt}', '{$post->post_status}', '{$post->post_type}', "
-    ."'{$post->comment_status}', '{$post->ping_status}', '{$post->post_password}', "
-    ."'{$post->post_name}', '{$post->to_ping}', '{$post->pinged}', '{$post->post_modified}', "
-    ."'{$post->post_modified_gmt}', {$post->post_parent}, {$post->menu_order}, "
-    ."'{$post->post_mime_type}', '{$post->guid}'"
-    .");";
-    $res = mysql_query($sql)or die(mysql_error());
-
-    mysql_close($connection);
+    $this->create_table();
+    $this->copy_data();
   }
 
-  private static function mrn_create_table()
+  public function deactivate()
   {
-    $dbname = "wddb";
-    $tablename = "mrn_blogs";
-
-    $connection = mysql_connect('localhost', 'root', 'P@ssw0rd');
-    mysql_select_db($dbname, $connection);
-
-    $sql = "CREATE TABLE `{$tablename}` ("
-    ."`ID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,"
-    ."`post_author` bigint(20) unsigned DEFAULT '0',"
-    ."`post_date` datetime DEFAULT '0000-00-00 00:00:00',"
-    ."`post_date_gmt` datetime DEFAULT '0000-00-00 00:00:00',"
-    ."`post_content` longtext COLLATE utf8mb4_unicode_ci,"
-    ."`post_title` text COLLATE utf8mb4_unicode_ci,"
-    ."`post_excerpt` text COLLATE utf8mb4_unicode_ci,"
-    ."`post_status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'publish',"
-    ."`comment_status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'open',"
-    ."`ping_status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'open',"
-    ."`post_password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',"
-    ."`post_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT '',"
-    ."`to_ping` text COLLATE utf8mb4_unicode_ci,"
-    ."`pinged` text COLLATE utf8mb4_unicode_ci,"
-    ."`post_modified` datetime DEFAULT '0000-00-00 00:00:00',"
-    ."`post_modified_gmt` datetime DEFAULT '0000-00-00 00:00:00',"
-    ."`post_content_filtered` longtext COLLATE utf8mb4_unicode_ci,"
-    ."`post_parent` bigint(20) unsigned DEFAULT '0',"
-    ."`guid` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',"
-    ."`menu_order` int(11) DEFAULT '0',"
-    ."`post_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'post',"
-    ."`post_mime_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '',"
-    ."`comment_count` bigint(20) DEFAULT '0',"
-    ."PRIMARY KEY (`ID`),"
-    ."FULLTEXT INDEX (`post_content`)"
-    .") ENGINE=Mroonga DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
-
-    $res = mysql_query($sql)or die(mysql_error());
-    mysql_close($connection);
+    $this->drop_table();
   }
 
-  private static function mrn_drop_table()
+  private function create_table()
   {
-    $dbname = "wddb";
-    $tablename = "mrn_blogs";
+    global $wpdb;
 
-    $connection = mysql_connect('localhost', 'root', 'P@ssw0rd');
-    mysql_select_db($dbname, $connection);
+    $wpdb->query("CREATE TABLE {$this->table_name} ( "
+                 ."`post_id` bigint(20) unsigned NOT NULL, "
+                 ."`post_title` text COLLATE utf8mb4_unicode_ci, "
+                 ."`post_content` longtext COLLATE utf8mb4_unicode_ci, "
+                 ."FULLTEXT INDEX (`post_title`, `post_content`) COMMENT 'normalizer \"NormalizerAuto\"'"
+                 .") ENGINE=Mroonga "
+                 ."DEFAULT CHARSET=utf8mb4 "
+                 ."COLLATE=utf8mb4_unicode_ci;");
+  }
 
-    $sql = "DROP TABLE `{$tablename}`;";
+  private function copy_data()
+  {
+    global $wpdb;
 
-    $res = mysql_query($sql)or die(mysql_error());
-    mysql_close($connection);
+    $wpdb->query("INSERT INTO {$this->table_name} "
+                 . "(post_id, post_title, post_content) "
+                 . "SELECT ID, post_title, post_content "
+                 . "FROM {$wpdb->posts}");
+  }
+
+  private function drop_table()
+  {
+    global $wpdb;
+
+    $wpdb->query("DROP TABLE {$this->table_name}");
+  }
+
+  public function insert_data($post_id, $post)
+  {
+    global $wpdb;
+
+    $wpdb->query($wpdb->prepare("INSERT INTO {$this->table_name} "
+                                ."(post_id, post_title, post_content) "
+                                ."VALUES "
+                                ."(%s, %s, %s)",
+                                $post_id,
+                                $post->post_title,
+                                $post->post_content));
   }
 
   public function fulltext_search($search, $wp_query)
   {
-    if(isset($wp_query->query['s']))
+    return '';
+  }
+
+  public function fulltext_search_join($join, $wp_query)
+  {
+    global $wpdb;
+
+    $search_query = $wp_query->get("s");
+    if (strlen($search_query) > 0)
     {
-      $search = "SELECT SQL_CALC_FOUND_ROWS mrn_blogs.* "
-      ."FROM mrn_blogs WHERE 1=1 "
-      ."AND (( MATCH(mrn_blogs.post_content) "
-      ."AGAINST('{$wp_query->query['s']}' IN BOOLEAN MODE) ));";
+      $join .= $wpdb->prepare(" INNER JOIN (SELECT post_id, "
+                              . "MATCH (post_title, post_content) "
+                              . "AGAINST (%s IN BOOLEAN MODE) AS score "
+                              . "FROM {$this->table_name} WHERE "
+                              . "MATCH (post_title, post_content) "
+                              . "AGAINST (%s IN BOOLEAN MODE)) AS matched_posts "
+                              . "ON {$wpdb->posts}.ID = matched_posts.post_id",
+                              "*D+W1:10,2:1 $search_query",
+                              "*D+W1:10,2:1 $search_query");
     }
-    return $search;
+    return $join;
+  }
+
+  public function fulltext_search_orderby($orderby, $wp_query)
+  {
+    global $wpdb;
+
+    $search_query = $wp_query->get("s");
+    if (strlen($search_query) > 0)
+    {
+      $orderby = 'score DESC';
+    }
+    return $orderby;
   }
 }
 
 $MroongaSearch = new MroongaSearch();
-add_action('publish_post', array($MroongaSearch, 'insert_data'), 10, 2);
-add_filter('posts_request', array($MroongaSearch, 'fulltext_search'), 10, 2);
 
-register_activation_hook(__FILE__, array('MroongaSearch', 'activate'));
-register_deactivation_hook(__FILE__, array('MroongaSearch', 'deactivate'));
+register_activation_hook(__FILE__, array($MroongaSearch, 'activate'));
+register_deactivation_hook(__FILE__, array($MroongaSearch, 'deactivate'));
+
+add_action('publish_post', array($MroongaSearch, 'insert_data'), 10, 2);
+add_filter('posts_search', array($MroongaSearch, 'fulltext_search'), 10, 2);
+add_filter('posts_join', array($MroongaSearch, 'fulltext_search_join'), 10, 2);
+add_filter('posts_search_orderby', array($MroongaSearch, 'fulltext_search_orderby'), 10, 2);
 ?>
