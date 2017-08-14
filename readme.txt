@@ -1,4 +1,4 @@
-=== Plugin Name ===
+=== Mroonga ===
 Contributors: ktou
 Tags: full-text-search, spam
 Requires at least: 4.8.1
