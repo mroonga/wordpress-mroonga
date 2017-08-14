@@ -48,13 +48,14 @@ class MroongaSearch
     global $wpdb;
 
     $wpdb->query("CREATE TABLE {$this->table_name()} ( "
-                 ."`post_id` bigint(20) unsigned NOT NULL, "
-                 ."`post_title` text COLLATE utf8mb4_unicode_ci, "
-                 ."`post_content` longtext COLLATE utf8mb4_unicode_ci, "
-                 ."FULLTEXT INDEX (`post_title`, `post_content`) COMMENT 'normalizer \"NormalizerAuto\"'"
-                 .") ENGINE=Mroonga "
-                 ."DEFAULT CHARSET=utf8mb4 "
-                 ."COLLATE=utf8mb4_unicode_ci;");
+                 . "`post_id` bigint(20) unsigned PRIMARY KEY, "
+                 . "`post_title` text COLLATE utf8mb4_unicode_ci, "
+                 . "`post_content` longtext COLLATE utf8mb4_unicode_ci, "
+                 . "FULLTEXT INDEX (`post_title`, `post_content`) "
+                 . "COMMENT 'normalizer \"NormalizerAuto\"' "
+                 . ") ENGINE=Mroonga "
+                 . "DEFAULT CHARSET=utf8mb4 "
+                 . "COLLATE=utf8mb4_unicode_ci;");
   }
 
   private function copy_data()
@@ -74,14 +75,14 @@ class MroongaSearch
     $wpdb->query("DROP TABLE {$this->table_name()}");
   }
 
-  public function insert_data($post_id, $post)
+  public function update_post($post_id, $post)
   {
     global $wpdb;
 
-    $wpdb->insert($this->table_name(),
-                  array("post_id" => $post_id,
-                        "post_title" => $post->post_title,
-                        "post_content" => $post->post_content));
+    $wpdb->replace($this->table_name(),
+                   array("post_id" => $post_id,
+                         "post_title" => $post->post_title,
+                         "post_content" => $post->post_content));
   }
 
   public function fulltext_search($search, $wp_query)
@@ -96,6 +97,7 @@ class MroongaSearch
     $search_query = $wp_query->get("s");
     if (strlen($search_query) > 0)
     {
+      $boolean_mode_query = "*D+W1:10,2:1 $search_query";
       $join .= $wpdb->prepare(" INNER JOIN (SELECT post_id, "
                               . "MATCH (post_title, post_content) "
                               . "AGAINST (%s IN BOOLEAN MODE) AS score "
@@ -103,8 +105,8 @@ class MroongaSearch
                               . "MATCH (post_title, post_content) "
                               . "AGAINST (%s IN BOOLEAN MODE)) AS matched_posts "
                               . "ON {$wpdb->posts}.ID = matched_posts.post_id",
-                              "*D+W1:10,2:1 $search_query",
-                              "*D+W1:10,2:1 $search_query");
+                              $boolean_mode_query,
+                              $boolean_mode_query);
     }
     return $join;
   }
@@ -127,7 +129,7 @@ $MroongaSearch = new MroongaSearch();
 register_activation_hook(__FILE__, array($MroongaSearch, 'activate'));
 register_deactivation_hook(__FILE__, array($MroongaSearch, 'deactivate'));
 
-add_action('publish_post', array($MroongaSearch, 'insert_data'), 10, 2);
+add_action('publish_post', array($MroongaSearch, 'update_post'), 10, 2);
 add_filter('posts_search', array($MroongaSearch, 'fulltext_search'), 10, 2);
 add_filter('posts_join', array($MroongaSearch, 'fulltext_search_join'), 10, 2);
 add_filter('posts_search_orderby', array($MroongaSearch, 'fulltext_search_orderby'), 10, 2);
