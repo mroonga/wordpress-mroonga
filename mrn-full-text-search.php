@@ -35,7 +35,7 @@ class MroongaSearch
     global $wpdb;
 
     if ($wpdb->query("SELECT name FROM mysql.plugin "
-                     . "WHERE name = 'Mroonga'") == 1) {
+                     . "WHERE name = 'Mroonga'") > 0) {
       return;
     }
 
