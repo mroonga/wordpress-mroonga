@@ -78,13 +78,10 @@ class MroongaSearch
   {
     global $wpdb;
 
-    $wpdb->query($wpdb->prepare("INSERT INTO {$this->table_name()} "
-                                ."(post_id, post_title, post_content) "
-                                ."VALUES "
-                                ."(%s, %s, %s)",
-                                $post_id,
-                                $post->post_title,
-                                $post->post_content));
+    $wpdb->insert($this->table_name(),
+                  array("post_id" => $post_id,
+                        "post_title" => $post->post_title,
+                        "post_content" => $post->post_content));
   }
 
   public function fulltext_search($search, $wp_query)
