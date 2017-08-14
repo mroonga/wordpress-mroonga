@@ -8,8 +8,6 @@ Author: Yasuhiro Horimoto
 Author URI: https://www.clear-code.com/
 License: GPL2
 */
-/*
-*/
 
 class MroongaSearch
 {
@@ -118,4 +116,3 @@ add_action('publish_post', array($MroongaSearch, 'insert_data'), 10, 2);
 add_filter('posts_search', array($MroongaSearch, 'fulltext_search'), 10, 2);
 add_filter('posts_join', array($MroongaSearch, 'fulltext_search_join'), 10, 2);
 add_filter('posts_search_orderby', array($MroongaSearch, 'fulltext_search_orderby'), 10, 2);
-?>
