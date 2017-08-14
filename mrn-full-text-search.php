@@ -23,6 +23,7 @@ class MroongaSearch
     $this->ensure_mroonga();
     $this->create_table();
     $this->copy_data();
+    $this->create_index();
   }
 
   public function deactivate()
@@ -50,9 +51,7 @@ class MroongaSearch
     $wpdb->query("CREATE TABLE {$this->table_name()} ( "
                  . "`post_id` bigint(20) unsigned PRIMARY KEY, "
                  . "`post_title` text COLLATE utf8mb4_unicode_ci, "
-                 . "`post_content` longtext COLLATE utf8mb4_unicode_ci, "
-                 . "FULLTEXT INDEX (`post_title`, `post_content`) "
-                 . "COMMENT 'normalizer \"NormalizerAuto\"' "
+                 . "`post_content` longtext COLLATE utf8mb4_unicode_ci"
                  . ") ENGINE=Mroonga "
                  . "DEFAULT CHARSET=utf8mb4 "
                  . "COLLATE=utf8mb4_unicode_ci;");
@@ -67,6 +66,16 @@ class MroongaSearch
                  . "SELECT ID, post_title, post_content "
                  . "FROM {$wpdb->posts} "
                  . "WHERE post_status = 'publish'");
+  }
+
+  private function create_index()
+  {
+    global $wpdb;
+
+    $wpdb->query("ALTER TABLE {$this->table_name()} "
+                 . "ADD FULLTEXT INDEX "
+                 . "(post_title, post_content) "
+                 . "COMMENT 'normalizer \"NormalizerAuto\"'");
   }
 
   private function drop_table()
