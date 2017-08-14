@@ -65,7 +65,8 @@ class MroongaSearch
     $wpdb->query("INSERT INTO {$this->table_name()} "
                  . "(post_id, post_title, post_content) "
                  . "SELECT ID, post_title, post_content "
-                 . "FROM {$wpdb->posts}");
+                 . "FROM {$wpdb->posts} "
+                 . "WHERE post_status = 'publish'");
   }
 
   private function drop_table()
