@@ -11,8 +11,12 @@ License: GPL2
 
 class MroongaSearch
 {
-  /* TODO: Move to construct. Add table name prefix. */
-  private $table_name = "mrn_posts";
+  public function table_name()
+  {
+    global $wpdb;
+
+    return $wpdb->prefix . "mrn_posts";
+  }
 
   public function activate()
   {
@@ -29,7 +33,7 @@ class MroongaSearch
   {
     global $wpdb;
 
-    $wpdb->query("CREATE TABLE {$this->table_name} ( "
+    $wpdb->query("CREATE TABLE {$this->table_name()} ( "
                  ."`post_id` bigint(20) unsigned NOT NULL, "
                  ."`post_title` text COLLATE utf8mb4_unicode_ci, "
                  ."`post_content` longtext COLLATE utf8mb4_unicode_ci, "
@@ -43,7 +47,7 @@ class MroongaSearch
   {
     global $wpdb;
 
-    $wpdb->query("INSERT INTO {$this->table_name} "
+    $wpdb->query("INSERT INTO {$this->table_name()} "
                  . "(post_id, post_title, post_content) "
                  . "SELECT ID, post_title, post_content "
                  . "FROM {$wpdb->posts}");
@@ -53,14 +57,14 @@ class MroongaSearch
   {
     global $wpdb;
 
-    $wpdb->query("DROP TABLE {$this->table_name}");
+    $wpdb->query("DROP TABLE {$this->table_name()}");
   }
 
   public function insert_data($post_id, $post)
   {
     global $wpdb;
 
-    $wpdb->query($wpdb->prepare("INSERT INTO {$this->table_name} "
+    $wpdb->query($wpdb->prepare("INSERT INTO {$this->table_name()} "
                                 ."(post_id, post_title, post_content) "
                                 ."VALUES "
                                 ."(%s, %s, %s)",
@@ -84,7 +88,7 @@ class MroongaSearch
       $join .= $wpdb->prepare(" INNER JOIN (SELECT post_id, "
                               . "MATCH (post_title, post_content) "
                               . "AGAINST (%s IN BOOLEAN MODE) AS score "
-                              . "FROM {$this->table_name} WHERE "
+                              . "FROM {$this->table_name()} WHERE "
                               . "MATCH (post_title, post_content) "
                               . "AGAINST (%s IN BOOLEAN MODE)) AS matched_posts "
                               . "ON {$wpdb->posts}.ID = matched_posts.post_id",
