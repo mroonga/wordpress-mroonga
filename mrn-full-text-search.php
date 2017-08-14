@@ -20,6 +20,7 @@ class MroongaSearch
 
   public function activate()
   {
+    $this->ensure_mroonga();
     $this->create_table();
     $this->copy_data();
   }
@@ -27,6 +28,19 @@ class MroongaSearch
   public function deactivate()
   {
     $this->drop_table();
+  }
+
+  private function ensure_mroonga()
+  {
+    global $wpdb;
+
+    if ($wpdb->query("SELECT name FROM mysql.plugin "
+                     . "WHERE name = 'Mroonga'") == 1) {
+      return;
+    }
+
+    $wpdb->query("INSTALL PLUGIN Mroonga SONAME 'ha_mroonga.so'");
+    // TODO Report error on failure
   }
 
   private function create_table()
