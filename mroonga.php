@@ -3,10 +3,10 @@
 Plugin Name: Mroonga
 Plugin URI: https://github.com/mroonga/wordpress-mroonga
 Description: This plugin provides fast and rich full text search features based on Mroonga. Mroonga is a MySQL/MariaDB plugin. You don't need to add a new server only for full text search. You can use existing MySQL/MariaDB server. It reduces maintainance cost.
-Version: 0.1
+Version: 0.1.0
 Author: Yasuhiro Horimoto
 Author URI: https://www.clear-code.com/
-License: GPL2
+License: GPL2 or later
 */
 
 class MroongaSearch

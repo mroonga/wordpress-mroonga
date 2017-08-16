@@ -1,6 +1,6 @@
 === Mroonga ===
 Contributors: ktou
-Tags: full-text-search, spam
+Tags: full-text-search
 Requires at least: 4.8.1
 Tested up to: 4.8.1
 Stable tag: 4.8.1
@@ -59,12 +59,12 @@ directory take precedence. For example, `/assets/screenshot-1.png` would win ove
 
 == Changelog ==
 
-= 0.1 =
+= 0.1.0 =
 
 * Initial release.
 
 == Upgrade Notice ==
 
-= 0.1 =
+= 0.1.0 =
 
 None.
