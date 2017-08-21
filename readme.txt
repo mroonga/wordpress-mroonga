@@ -1,5 +1,5 @@
 === Mroonga ===
-Contributors: ktou
+Contributors: komainu8, ktou
 Tags: full-text-search
 Requires at least: 4.8.1
 Tested up to: 4.8.1
