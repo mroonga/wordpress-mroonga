@@ -3,7 +3,7 @@
 Plugin Name: Mroonga
 Plugin URI: https://github.com/mroonga/wordpress-mroonga
 Description: This plugin provides fast and rich full text search features based on Mroonga. Mroonga is a MySQL/MariaDB plugin. You don't need to add a new server only for full text search. You can use existing MySQL/MariaDB server. It reduces maintainance cost.
-Version: 0.1.0
+Version: 0.1.1
 Author: Yasuhiro Horimoto
 Author URI: https://www.clear-code.com/
 License: GPL2 or later
@@ -11,11 +11,20 @@ License: GPL2 or later
 
 class MroongaSearch
 {
+
+  private $textdomain = 'mroonga_search';
+  private $mroonga_install_doc = 'http://mroonga.org/docs/install.html';
+
   public function table_name()
   {
     global $wpdb;
 
     return $wpdb->prefix . "mrn_posts";
+  }
+
+  public function __construct()
+  {
+    load_plugin_textdomain( $this->textdomain, false, dirname( plugin_basename( __FILE__ ) ) . '/languages'  );
   }
 
   public function activate()
@@ -35,13 +44,12 @@ class MroongaSearch
   {
     global $wpdb;
 
-    if ($wpdb->query("SELECT name FROM mysql.plugin "
-                     . "WHERE name = 'Mroonga'") > 0) {
-      return;
+    if ( ! $wpdb->get_var( "SELECT COUNT(*) FROM INFORMATION_SCHEMA.PLUGINS "
+                     . " WHERE PLUGIN_NAME = 'Mroonga'" ) ) {
+      $msg  = __( 'Mroonga is not installed on your DB Server.', $this->textdomain );
+      $msg .= sprintf( __( 'Please install Mroonga refer to %s.', $this->textdomain ), $this->mroonga_install_doc );
+      exit( $msg );
     }
-
-    $wpdb->query("INSTALL PLUGIN Mroonga SONAME 'ha_mroonga.so'");
-    // TODO Report error on failure
   }
 
   private function create_table()
@@ -61,11 +69,16 @@ class MroongaSearch
   {
     global $wpdb;
 
-    $wpdb->query("INSERT INTO {$this->table_name()} "
-                 . "(post_id, post_title, post_content) "
-                 . "SELECT ID, post_title, post_content "
-                 . "FROM {$wpdb->posts} "
-                 . "WHERE post_status = 'publish'");
+    if ( $post_types = $this->get_search_post_types() ) {
+      $post_types = esc_sql( $post_types );
+      $post_type_in_string = "'" . implode( "','", $post_types ) . "'";
+      $wpdb->query("INSERT INTO {$this->table_name()} "
+                   . "(post_id, post_title, post_content) "
+                   . "SELECT ID, post_title, post_content "
+                   . "FROM {$wpdb->posts} "
+                   . "WHERE post_status IN ('publish', 'private') "
+                   . "AND post_type IN ($post_type_in_string)");
+    }
   }
 
   private function create_index()
@@ -82,17 +95,27 @@ class MroongaSearch
   {
     global $wpdb;
 
-    $wpdb->query("DROP TABLE {$this->table_name()}");
+    $wpdb->query("DROP TABLE IF EXISTS {$this->table_name()}");
+  }
+
+  private function get_search_post_types ()
+  {
+    return apply_filters( 'mroonga_search_post_types', get_post_types( array( "exclude_from_search" => false ) ) );
   }
 
   public function update_post($post_id, $post)
   {
     global $wpdb;
 
-    $wpdb->replace($this->table_name(),
-                   array("post_id" => $post_id,
-                         "post_title" => $post->post_title,
-                         "post_content" => $post->post_content));
+    if ( in_array( $post->post_status, array( "publish", "private" ) ) && in_array( $post->post_type, $this->get_search_post_types() ) ) {
+      $wpdb->replace($this->table_name(),
+        array(
+          "post_id" => $post_id,
+          "post_title" => $post->post_title,
+          "post_content" => $post->post_content
+        )
+      );
+    }
   }
 
   public function fulltext_search($search, $wp_query)
@@ -132,6 +155,13 @@ class MroongaSearch
     }
     return $orderby;
   }
+
+  public function after_delete_post ( $post_id )
+  {
+    global $wpdb;
+    $wpdb->delete( $this->table_name(), array( 'post_id' => $post_id ) );
+  }
+
 }
 
 $MroongaSearch = new MroongaSearch();
@@ -139,7 +169,9 @@ $MroongaSearch = new MroongaSearch();
 register_activation_hook(__FILE__, array($MroongaSearch, 'activate'));
 register_deactivation_hook(__FILE__, array($MroongaSearch, 'deactivate'));
 
-add_action('publish_post', array($MroongaSearch, 'update_post'), 10, 2);
+add_action('wp_insert_post', array($MroongaSearch, 'update_post'), 10, 2);
 add_filter('posts_search', array($MroongaSearch, 'fulltext_search'), 10, 2);
 add_filter('posts_join', array($MroongaSearch, 'fulltext_search_join'), 10, 2);
 add_filter('posts_search_orderby', array($MroongaSearch, 'fulltext_search_orderby'), 10, 2);
+
+add_action('after_delete_post', array($MroongaSearch, 'after_delete_post'), 100, 1 );
