@@ -44,11 +44,17 @@ class MroongaSearch
   {
     global $wpdb;
 
-    if ( ! $wpdb->get_var( "SELECT COUNT(*) FROM INFORMATION_SCHEMA.PLUGINS "
-                     . " WHERE PLUGIN_NAME = 'Mroonga'" ) ) {
-      $msg  = __( "Mroonga is not installed on your DB Server.", $this->textdomain );
-      $msg .= sprintf( __( "Please install Mroonga refer to %s.", $this->textdomain ), $this->mroonga_install_doc );
-      exit( $msg );
+    $is_mroonga_installed =
+      $wpdb->get_var( "SELECT COUNT(*) FROM INFORMATION_SCHEMA.PLUGINS "
+                      . " WHERE PLUGIN_NAME = 'Mroonga'" );
+    if ( ! $is_mroonga_installed ) {
+      $message  = __( "Mroonga is not installed on your DB Server.",
+                      $this->textdomain );
+      $message .= " ";
+      $message .= sprintf( __( "Please install Mroonga refer to %s.",
+                               $this->textdomain ),
+                           $this->mroonga_install_doc );
+      exit( $messagee );
     }
   }
 
