@@ -100,7 +100,8 @@ class MroongaSearch
 
   private function get_search_post_types ()
   {
-    return apply_filters( "mroonga_search_post_types", get_post_types( array( "exclude_from_search" => false ) ) );
+    $post_types = get_post_types( array( "exclude_from_search" => false ) );
+    return apply_filters( "mroonga_search_post_types", $post_types );
   }
 
   public function update_post($post_id, $post)
