@@ -12,8 +12,8 @@ License: GPL2 or later
 class MroongaSearch
 {
 
-  private $textdomain = 'mroonga_search';
-  private $mroonga_install_doc = 'http://mroonga.org/docs/install.html';
+  private $textdomain = "mroonga_search";
+  private $mroonga_install_doc = "http://mroonga.org/docs/install.html";
 
   public function table_name()
   {
@@ -24,7 +24,7 @@ class MroongaSearch
 
   public function __construct()
   {
-    load_plugin_textdomain( $this->textdomain, false, dirname( plugin_basename( __FILE__ ) ) . '/languages'  );
+    load_plugin_textdomain( $this->textdomain, false, dirname( plugin_basename( __FILE__ ) ) . "/languages"  );
   }
 
   public function activate()
@@ -46,8 +46,8 @@ class MroongaSearch
 
     if ( ! $wpdb->get_var( "SELECT COUNT(*) FROM INFORMATION_SCHEMA.PLUGINS "
                      . " WHERE PLUGIN_NAME = 'Mroonga'" ) ) {
-      $msg  = __( 'Mroonga is not installed on your DB Server.', $this->textdomain );
-      $msg .= sprintf( __( 'Please install Mroonga refer to %s.', $this->textdomain ), $this->mroonga_install_doc );
+      $msg  = __( "Mroonga is not installed on your DB Server.", $this->textdomain );
+      $msg .= sprintf( __( "Please install Mroonga refer to %s.", $this->textdomain ), $this->mroonga_install_doc );
       exit( $msg );
     }
   }
@@ -100,7 +100,7 @@ class MroongaSearch
 
   private function get_search_post_types ()
   {
-    return apply_filters( 'mroonga_search_post_types', get_post_types( array( "exclude_from_search" => false ) ) );
+    return apply_filters( "mroonga_search_post_types", get_post_types( array( "exclude_from_search" => false ) ) );
   }
 
   public function update_post($post_id, $post)
@@ -120,7 +120,7 @@ class MroongaSearch
 
   public function fulltext_search($search, $wp_query)
   {
-    return '';
+    return "";
   }
 
   public function fulltext_search_join($join, $wp_query)
@@ -151,7 +151,7 @@ class MroongaSearch
     $search_query = $wp_query->get("s");
     if (strlen($search_query) > 0)
     {
-      $orderby = 'score DESC';
+      $orderby = "score DESC";
     }
     return $orderby;
   }
@@ -159,19 +159,19 @@ class MroongaSearch
   public function after_delete_post ( $post_id )
   {
     global $wpdb;
-    $wpdb->delete( $this->table_name(), array( 'post_id' => $post_id ) );
+    $wpdb->delete( $this->table_name(), array( "post_id" => $post_id ) );
   }
 
 }
 
 $MroongaSearch = new MroongaSearch();
 
-register_activation_hook(__FILE__, array($MroongaSearch, 'activate'));
-register_deactivation_hook(__FILE__, array($MroongaSearch, 'deactivate'));
+register_activation_hook(__FILE__, array($MroongaSearch, "activate"));
+register_deactivation_hook(__FILE__, array($MroongaSearch, "deactivate"));
 
-add_action('wp_insert_post', array($MroongaSearch, 'update_post'), 10, 2);
-add_filter('posts_search', array($MroongaSearch, 'fulltext_search'), 10, 2);
-add_filter('posts_join', array($MroongaSearch, 'fulltext_search_join'), 10, 2);
-add_filter('posts_search_orderby', array($MroongaSearch, 'fulltext_search_orderby'), 10, 2);
+add_action("wp_insert_post", array($MroongaSearch, "update_post"), 10, 2);
+add_filter("posts_search", array($MroongaSearch, "fulltext_search"), 10, 2);
+add_filter("posts_join", array($MroongaSearch, "fulltext_search_join"), 10, 2);
+add_filter("posts_search_orderby", array($MroongaSearch, "fulltext_search_orderby"), 10, 2);
 
-add_action('after_delete_post', array($MroongaSearch, 'after_delete_post'), 100, 1 );
+add_action("after_delete_post", array($MroongaSearch, "after_delete_post"), 100, 1 );
