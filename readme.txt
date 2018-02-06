@@ -59,11 +59,23 @@ directory take precedence. For example, `/assets/screenshot-1.png` would win ove
 
 == Changelog ==
 
-= 0.1.0 =
+= 0.1.1 - 2018-02-09 =
+
+* Stopped to index needless contents.
+  [GitHub#2][Patch by Yuya Tajima]
+
+* Added Japanese error messages.
+  [GitHub#2][Patch by Yuya Tajima]
+
+= 0.1.0 - 2017-08-16 =
 
 * Initial release.
 
 == Upgrade Notice ==
+
+= 0.1.1 =
+
+None.
 
 = 0.1.0 =
 
