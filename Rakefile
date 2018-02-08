@@ -130,18 +130,19 @@ desc "Update translation"
 task :translate => (edit_po_files + mo_files)
 
 
-release_repository = "../wordpress-mroonga.release"
+release_repository_path = "../wordpress-mroonga.release"
+release_repository_url = "https://plugins.svn.wordpress.org/mroonga"
 
-directory release_repository do
+directory release_repository_path do
   sh("svn", "co",
-     "https://plugins.svn.wordpress.org/mroonga",
-     release_repository)
+     release_repository_url,
+     release_repository_path)
 end
 
 desc "Publish #{version}"
-task :publish => [release_repository, :translate] do
-  trunk = File.join(release_repository, "trunk")
-  tag = File.join(release_repository, "tags", version)
+task :publish => [release_repository_path, :translate] do
+  trunk = File.join(release_repository_path, "trunk")
+  sh("svn", "up", trunk)
   # TODO: Removed files
   release_files.each do |file|
     dest_file = File.join(trunk, file)
@@ -157,7 +158,10 @@ task :publish => [release_repository, :translate] do
   sh("svn", "ci",
      "--message", "Import #{version}",
      trunk)
-  sh("svn", "cp", trunk, tag)
+  sh("svn", "cp",
+     "--message", "#{version} has been released!!!",
+     "#{release_repository_url}/trunk",
+     "#{release_repository_url}/tags/#{version}")
 end
 
 desc "Tag #{version}"
