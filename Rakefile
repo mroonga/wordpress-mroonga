@@ -157,10 +157,7 @@ task :publish => [release_repository, :translate] do
   sh("svn", "ci",
      "--message", "Import #{version}",
      trunk)
-  sh("svn", "cp",
-     "--message", "#{version} has been released!!!",
-     trunk,
-     tag)
+  sh("svn", "cp", trunk, tag)
 end
 
 desc "Tag #{version}"
