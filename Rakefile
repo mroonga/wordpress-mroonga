@@ -64,7 +64,6 @@ translated_languages.each do |language|
   if po_file_is_updated
     edit_po_file_dependencies << :force
   end
-  p [po_file_is_updated, po_file_dependencies]
   file edit_po_file => edit_po_file_dependencies do
     if po_file_is_updated
       rm_f(edit_po_file)
