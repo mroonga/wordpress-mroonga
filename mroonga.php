@@ -12,7 +12,7 @@ License: GPL2 or later
 class MroongaSearch
 {
 
-  private $textdomain = "mroonga_search";
+  private $textdomain = "mroonga";
   private $mroonga_install_doc = "http://mroonga.org/docs/install.html";
 
   public function table_name()
