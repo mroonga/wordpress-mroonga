@@ -10,6 +10,11 @@ end
 
 php_files = Dir.glob("*.php")
 
+release_files = []
+release_files += mo_files
+release_files += php_files
+release_files += ["readme.txt"]
+
 def detect_version
   mroonga_php = File.join(__dir__, "mroonga.php")
   File.open(mroonga_php) do |input|
@@ -24,8 +29,6 @@ def detect_version
 end
 
 version = ENV["VERSION"] || detect_version
-
-
 
 pot_file = "languages/#{text_domain}.pot"
 
@@ -125,3 +128,46 @@ end
 
 desc "Update translation"
 task :translate => (edit_po_files + mo_files)
+
+
+release_repository = "../wordpress-mroonga.release"
+
+directory release_repository do
+  sh("svn", "co",
+     "https://plugins.svn.wordpress.org/mroonga",
+     release_repository)
+end
+
+desc "Publish #{version}"
+task :publish => [release_repository, :translate] do
+  trunk = File.join(release_repository, "trunk")
+  tag = File.join(release_repository, "tags", version)
+  # TODO: Removed files
+  release_files.each do |file|
+    dest_file = File.join(trunk, file)
+    dest_directory = File.dirname(dest_file)
+    unless File.exist?(dest_directory)
+      mkdir_p(dest_directory)
+      sh("svn", "add", dest_directory)
+    end
+    dest_file_exist = File.exist?(dest_file)
+    cp(file, dest_file)
+    sh("svn", "add", dest_file) unless dest_file_exist
+  end
+  sh("svn", "ci",
+     "--message", "Import #{version}",
+     trunk)
+  sh("svn", "cp",
+     "--message", "#{version} has been released!!!",
+     trunk,
+     tags)
+end
+
+desc "Tag #{version}"
+task :tag do
+  sh("git", "tag", "-a", version, "-m", "#{version} has been released!!!")
+  sh("git", "push", "--tags")
+end
+
+desc "Release #{version}"
+task :release => [:publish, :tag]
