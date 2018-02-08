@@ -1,0 +1,4 @@
+/languages/*.timestamp
+/languages/*.edit.po
+/languages/*.pot
+# /languages/*.mo
