@@ -2,7 +2,7 @@
 Contributors: komainu8, ktou
 Tags: full-text-search
 Requires at least: 4.8.1
-Tested up to: 4.9.2
+Tested up to: 4.9.4
 Stable tag: 4.8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
